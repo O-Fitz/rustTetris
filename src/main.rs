@@ -1,5 +1,5 @@
 
-pub mod grid;
+pub mod block;
 pub mod debug;
 
 use crossterm::event::{self, Event, KeyCode};
@@ -44,35 +44,62 @@ fn get_input() -> Option<KeyCode> {
 }
 
 fn init_term() {
+    crossterm::execute!(io::stdout(), crossterm::terminal::EnterAlternateScreen);
     crossterm::terminal::enable_raw_mode();
 }
 
-fn mainloop() -> io::Result<()>{
+fn clean_term() {
+    match crossterm::terminal::disable_raw_mode() {
+        Ok(_) => (),
+        Err(err) => debug::print_error(err)
+    }
+
+    crossterm::execute!(io::stdout(), crossterm::terminal::LeaveAlternateScreen);
+}
+
+fn mainloop() {
+
+    const GRID_WIDTH: usize = 10;
+    const GRID_HEIGHT: usize = 20;
 
     enum Gamestate {Falling(FallingState), Landed(), LineDelete(LineDeleteState)}
 
-    let mut grid: grid::Grid = grid::init_grid();
+    let mut grid = [[false; GRID_WIDTH]; GRID_HEIGHT];
     let mut gamestate: Gamestate = Gamestate::Falling(FallingState{line:0});
 
+    let mut speed: u32 = 20;
+    let mut time: u32 = 0;
+
+    let mut current_block: block::Block = block::make_random_block();
+    let mut next_block: block::Block = block::make_random_block();
+
     loop{
-        
+        time += 1;
+        if time == speed{
+            time = 0;
+        }
+
         // Poll keypresses
-        
         match get_input() {
-            None => {},
+            None => (),
             Some(keycode) => {
                 match keycode{
                     KeyCode::Char('q') => break,
                     KeyCode::Char('a') => debug::print("A Pressed".to_string()),
-                    _ => {}
+                    _ => () 
                 }
             }
         }
         
 
-        // drop block
-        // TODO: Program block dropping down
-        
+        // Drop block
+        // TODO: Program block dropping
+        if let Gamestate::Falling(fs) = gamestate {
+
+            
+
+        }
+
         // Collision
         // TODO: Program collision code
         
@@ -82,12 +109,15 @@ fn mainloop() -> io::Result<()>{
         // Render
         // TODO: Program renderer 
     }
-    Ok(())
+    
 }
 
 fn main() {
 
     init_term();
+
     mainloop();
+
+    clean_term();
 
 }
